@@ -464,10 +464,11 @@
       border-radius: 8px;
       padding: 8px 12px;
       gap: 8px;
-      transition: background 0.2s;
+      transition: background 0.25s ease, transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
   }
   .folder-item:hover {
       background: rgba(255, 255, 255, 0.04);
+      transform: translateX(4px);
   }
 
   .folder-icon {
@@ -495,10 +496,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: color 0.2s;
+      transition: color 0.2s ease, transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
   }
   .remove-folder-btn:hover {
       color: #ff5f56;
+      transform: scale(1.15) rotate(5deg);
   }
   
   .no-folders-msg {
@@ -529,12 +531,13 @@
       align-items: center;
       gap: 12px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: background 0.25s ease, color 0.25s ease, padding-left 0.25s cubic-bezier(0.25, 1, 0.5, 1);
       outline: none;
   }
   .filter-item:hover {
       background: rgba(255, 255, 255, 0.03);
       color: #ffffff;
+      padding-left: 18px;
   }
   .filter-item.active {
       background: rgba(102, 252, 241, 0.08);

@@ -6,12 +6,13 @@
   let imgSrc = $state("");
   let loading = $state(true);
   let el = $state(null);
+  let loaded = $state(false);
 
-  let rotationStyle = $derived(
-    item.orientation === 3 ? "transform: rotate(180deg);" :
-    item.orientation === 6 ? "transform: rotate(90deg);" :
-    item.orientation === 8 ? "transform: rotate(270deg);" :
-    ""
+  let rotationTransform = $derived(
+    item.orientation === 3 ? "rotate(180deg)" :
+    item.orientation === 6 ? "rotate(90deg)" :
+    item.orientation === 8 ? "rotate(270deg)" :
+    "rotate(0deg)"
   );
 
   async function loadThumbnail() {
@@ -61,7 +62,14 @@
   {#if loading}
     <div class="skeleton"></div>
   {:else if item.media_type === "image"}
-    <img src={imgSrc} alt={item.filename} class="media-thumb" style={rotationStyle} loading="lazy" />
+    <img 
+      src={imgSrc} 
+      alt={item.filename} 
+      class="media-thumb" 
+      style="transform: {rotationTransform} scale({loaded ? 1 : 0.95}); opacity: {loaded ? 1 : 0};" 
+      onload={() => loaded = true}
+      loading="lazy" 
+    />
   {:else if item.media_type === "video"}
     <div class="video-placeholder">
       <svg viewBox="0 0 24 24" class="play-icon"><path d="M8 5v14l11-7z"/></svg>
@@ -97,7 +105,7 @@
       height: 100%;
       object-fit: cover;
       display: block;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
   }
   .skeleton {
       width: 100%;

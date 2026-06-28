@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { convertFileSrc } from "@tauri-apps/api/core";
   import { getCurrentWindow } from "@tauri-apps/api/window";
+  import { fade, scale } from "svelte/transition";
   
   // Lucide Icons
   import { 
@@ -40,11 +41,15 @@
   // Manual rotation state
   let manualRotation = $state(0);
 
-  // Reset zoom & manual rotation when switching items
+  // Cross-fade loaded state for smooth image switching
+  let viewerImageLoaded = $state(false);
+
+  // Reset zoom, manual rotation, and loaded state when switching items
   $effect(() => {
     if (item) {
       manualRotation = 0;
       resetZoom();
+      viewerImageLoaded = false;
     }
   });
 
@@ -156,6 +161,7 @@
   class="media-player-overlay" 
   role="dialog"
   onmousedown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+  transition:fade={{ duration: 200 }}
 >
   <!-- Top Bar Controls -->
   <div class="player-top-bar">
@@ -223,10 +229,12 @@
       <img 
         src={mediaSrc} 
         alt={item.filename}
-        class="viewer-image {manualRotation === 90 || manualRotation === 270 ? 'rotated-90-deg' : ''}"
+        class="viewer-image {viewerImageLoaded ? 'loaded' : ''} {manualRotation === 90 || manualRotation === 270 ? 'rotated-90-deg' : ''}"
         style="transform: scale({zoom}) translate({panX}px, {panY}px) rotate({manualRotation}deg); cursor: {zoom > 1 ? 'grab' : 'default'}"
         onmousedown={handleMouseDown}
+        onload={() => viewerImageLoaded = true}
         draggable="false"
+        transition:scale={{ duration: 250, start: 0.96 }}
       />
     {:else if item.media_type === "video"}
       <!-- svelte-ignore a11y_media_has_caption -->
@@ -239,9 +247,10 @@
         autoplay
         onplay={() => isPlaying = true}
         onpause={() => isPlaying = false}
+        transition:scale={{ duration: 250, start: 0.96 }}
       ></video>
     {:else if item.media_type === "audio"}
-      <div class="viewer-audio-card">
+      <div class="viewer-audio-card" transition:scale={{ duration: 250, start: 0.96 }}>
         <Music class="audio-card-icon" size={48} />
         <h3>{item.filename}</h3>
         <p class="audio-meta">{(item.size / (1024 * 1024)).toFixed(2)} MB</p>
@@ -324,12 +333,20 @@
       color: #66fcf1;
       border-color: rgba(102, 252, 241, 0.3);
       background: rgba(102, 252, 241, 0.08);
+      transform: translateY(-1px);
+  }
+  .icon-btn:active {
+      transform: translateY(0);
   }
   
   .close-btn:hover {
       color: #ff5f56;
       border-color: rgba(255, 95, 86, 0.3);
       background: rgba(255, 95, 86, 0.08);
+      transform: translateY(-1px);
+  }
+  .close-btn:active {
+      transform: translateY(0);
   }
   
   .nav-arrow {
@@ -350,19 +367,27 @@
       transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       outline: none;
   }
-  .nav-arrow:hover {
-      background: rgba(102, 252, 241, 0.1);
-      border-color: rgba(102, 252, 241, 0.4);
-      color: #66fcf1;
-      box-shadow: 0 0 16px rgba(102, 252, 241, 0.2);
-  }
   
   .nav-arrow.left {
       left: 32px;
   }
+  .nav-arrow.left:hover {
+      background: rgba(102, 252, 241, 0.1);
+      border-color: rgba(102, 252, 241, 0.4);
+      color: #66fcf1;
+      box-shadow: 0 0 16px rgba(102, 252, 241, 0.2);
+      transform: translateY(-50%) translateX(-4px);
+  }
   
   .nav-arrow.right {
       right: 32px;
+  }
+  .nav-arrow.right:hover {
+      background: rgba(102, 252, 241, 0.1);
+      border-color: rgba(102, 252, 241, 0.4);
+      color: #66fcf1;
+      box-shadow: 0 0 16px rgba(102, 252, 241, 0.2);
+      transform: translateY(-50%) translateX(4px);
   }
   
   .media-content-container {
@@ -380,7 +405,11 @@
       object-fit: contain;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
       border-radius: 4px;
-      transition: transform 0.1s ease-out;
+      opacity: 0;
+      transition: opacity 0.2s ease-out, transform 0.1s ease-out;
+  }
+  .viewer-image.loaded {
+      opacity: 1;
   }
   
   .viewer-image.rotated-90-deg {
