@@ -43,3 +43,4 @@
 - [x] Fix fullscreen on image/video not working by switching to native Tauri AppWindow fullscreen API <!-- id: 7.7 -->
 - [x] Fix wrong initial image viewer orientation by removing the browser double-rotation issue <!-- id: 7.8 -->
 - [x] Add manual rotation button (`RotateCw`) for user-driven orientation correction <!-- id: 7.9 -->
+- [x] Fix scrolling and thumbnail generation UI hanging by shifting heavy image operations to Tauri's async runtime spawn_blocking <!-- id: 7.10 -->

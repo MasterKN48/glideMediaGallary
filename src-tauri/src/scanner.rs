@@ -243,7 +243,7 @@ pub fn scan_directory_in_background(
 }
 
 #[tauri::command]
-pub fn get_or_create_thumbnail(app: AppHandle, file_path: String) -> Result<String, String> {
+pub async fn get_or_create_thumbnail(app: AppHandle, file_path: String) -> Result<String, String> {
     let cache_dir = app.path().app_cache_dir().map_err(|e| e.to_string())?;
     let thumb_dir = cache_dir.join("thumbnails");
     if !thumb_dir.exists() {
@@ -252,39 +252,55 @@ pub fn get_or_create_thumbnail(app: AppHandle, file_path: String) -> Result<Stri
     
     let thumb_filename = format!("{}.jpg", hash_path(&file_path));
     let full_thumb_path = thumb_dir.join(&thumb_filename);
+    let full_thumb_str = full_thumb_path.to_string_lossy().to_string();
     
     if full_thumb_path.exists() {
-        return Ok(full_thumb_path.to_string_lossy().to_string());
+        return Ok(full_thumb_str);
     }
     
-    let path = Path::new(&file_path);
-    if !path.exists() {
-        return Err("Original file does not exist".to_string());
-    }
-    
-    let ext = path.extension().and_then(|s| s.to_str()).unwrap_or_default();
-    let media_type = get_media_type(ext).unwrap_or_default();
-    
-    if media_type == "image" {
-        let img = image::ImageReader::open(path)
-            .map_err(|e| e.to_string())?
-            .with_guessed_format()
-            .map_err(|e| e.to_string())?
-            .decode()
-            .map_err(|e| e.to_string())?;
-            
-        let thumbnail = img.thumbnail(250, 250);
+    let file_path_clone = file_path.clone();
+    let full_thumb_path_clone = full_thumb_path.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let path = Path::new(&file_path_clone);
+        if !path.exists() {
+            return Err("Original file does not exist".to_string());
+        }
         
-        let mut out_file = File::create(&full_thumb_path).map_err(|e| e.to_string())?;
-        thumbnail.write_to(&mut out_file, image::ImageFormat::Jpeg)
-            .map_err(|e| e.to_string())?;
-            
-        let db_path = db::get_db_path(&app)?;
-        let full_thumb_str = full_thumb_path.to_string_lossy().to_string();
-        let _ = db::update_media_thumbnail(&db_path, &file_path, &full_thumb_str);
+        let ext = path.extension().and_then(|s| s.to_str()).unwrap_or_default();
+        let media_type = get_media_type(ext).unwrap_or_default();
         
-        Ok(full_thumb_str)
-    } else {
-        Err("Unsupported media type for thumbnail generation".to_string())
-    }
+        if media_type == "image" {
+            let img = image::ImageReader::open(path)
+                .map_err(|e| e.to_string())?
+                .with_guessed_format()
+                .map_err(|e| e.to_string())?
+                .decode()
+                .map_err(|e| e.to_string())?;
+                
+            let thumbnail = img.thumbnail(250, 250);
+            
+            let mut out_file = File::create(&full_thumb_path_clone).map_err(|e| e.to_string())?;
+            thumbnail.write_to(&mut out_file, image::ImageFormat::Jpeg)
+                .map_err(|e| e.to_string())?;
+            Ok(())
+        } else {
+            Err("Unsupported media type for thumbnail generation".to_string())
+        }
+    })
+    .await
+    .map_err(|e| e.to_string())?
+    ?;
+    
+    let app_clone = app.clone();
+    let file_path_clone2 = file_path.clone();
+    let full_thumb_str_clone = full_thumb_str.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        if let Ok(db_path) = db::get_db_path(&app_clone) {
+            let _ = db::update_media_thumbnail(&db_path, &file_path_clone2, &full_thumb_str_clone);
+        }
+    })
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(full_thumb_str)
 }
