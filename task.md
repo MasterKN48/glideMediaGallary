@@ -51,3 +51,4 @@
 - [x] Add high-contrast light-themed logo.svg for dark-mode sidebar visibility and implement Svelte startup splash screen animation <!-- id: 7.15 -->
 - [x] Add dynamic search option for media files and floating metadata details drawer with "Reveal in File Manager" action <!-- id: 7.16 -->
 - [x] Improve search input icon spacing gap and increase sidebar header logo dimensions for dark mode legibility <!-- id: 7.17 -->
+- [x] Add camera metadata, device details, and GPS location coordinates support to file info panel <!-- id: 7.18 -->

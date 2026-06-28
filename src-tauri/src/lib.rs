@@ -45,6 +45,36 @@ fn start_scan(app_handle: AppHandle, path: String) -> Result<(), String> {
 }
 
 #[command]
+fn get_media_metadata(path: String) -> Result<std::collections::HashMap<String, String>, String> {
+    let p = std::path::Path::new(&path);
+    if !p.exists() {
+        return Err("File does not exist".into());
+    }
+
+    let mut metadata = std::collections::HashMap::new();
+
+    // Check file stats
+    if let Ok(meta) = std::fs::metadata(p) {
+        metadata.insert("size".to_string(), meta.len().to_string());
+    }
+
+    // Try reading EXIF
+    if let Ok(file) = std::fs::File::open(p) {
+        let mut reader = std::io::BufReader::new(file);
+        let exif_reader = exif::Reader::new();
+        if let Ok(exif) = exif_reader.read_from_container(&mut reader) {
+            for field in exif.fields() {
+                let tag_name = format!("{:?}", field.tag);
+                let val_str = format!("{}", field.display_value().with_unit(&exif));
+                metadata.insert(tag_name, val_str);
+            }
+        }
+    }
+
+    Ok(metadata)
+}
+
+#[command]
 fn reveal_in_finder(path: String) -> Result<(), String> {
     #[cfg(target_os = "macos")]
     {
@@ -84,7 +114,8 @@ pub fn run() {
             remove_folder,
             start_scan,
             get_or_create_thumbnail,
-            reveal_in_finder
+            reveal_in_finder,
+            get_media_metadata
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

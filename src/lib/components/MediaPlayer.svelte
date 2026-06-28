@@ -48,6 +48,7 @@
 
   // File info panel state
   let showInfoPanel = $state(false);
+  let extendedMeta = $state(null);
 
   // Reset zoom, manual rotation, loaded state, and info panel when switching items
   $effect(() => {
@@ -56,6 +57,16 @@
       resetZoom();
       viewerImageLoaded = false;
       showInfoPanel = false;
+      extendedMeta = null;
+
+      // Fetch file EXIF/metadata on-the-fly
+      invoke("get_media_metadata", { path: item.file_path })
+        .then(meta => {
+          extendedMeta = meta;
+        })
+        .catch(err => {
+          console.error("Failed to read image EXIF details:", err);
+        });
     }
   });
 
@@ -333,7 +344,87 @@
           <span class="info-val">{new Date(item.modified_time * 1000).toLocaleString()}</span>
         </div>
 
-        {#if item.orientation > 1}
+        {#if extendedMeta}
+          <!-- Device Details Section -->
+          {#if extendedMeta.Make || extendedMeta.Model || extendedMeta.Software}
+            <div class="info-divider">Device Details</div>
+            
+            {#if extendedMeta.Make}
+              <div class="info-group">
+                <label>Manufacturer</label>
+                <span class="info-val">{extendedMeta.Make}</span>
+              </div>
+            {/if}
+            
+            {#if extendedMeta.Model}
+              <div class="info-group">
+                <label>Camera Model</label>
+                <span class="info-val">{extendedMeta.Model}</span>
+              </div>
+            {/if}
+            
+            {#if extendedMeta.Software}
+              <div class="info-group">
+                <label>Software / OS</label>
+                <span class="info-val">{extendedMeta.Software}</span>
+              </div>
+            {/if}
+          {/if}
+
+          <!-- Camera Settings Section -->
+          {#if extendedMeta.FNumber || extendedMeta.ExposureTime || extendedMeta.ISOSpeedRatings || extendedMeta.FocalLength}
+            <div class="info-divider">Camera Settings</div>
+            
+            {#if extendedMeta.FNumber}
+              <div class="info-group">
+                <label>Aperture</label>
+                <span class="info-val">{extendedMeta.FNumber.includes('/') ? extendedMeta.FNumber : `f/${parseFloat(extendedMeta.FNumber).toFixed(1)}`}</span>
+              </div>
+            {/if}
+            
+            {#if extendedMeta.ExposureTime}
+              <div class="info-group">
+                <label>Shutter Speed</label>
+                <span class="info-val">{extendedMeta.ExposureTime}s</span>
+              </div>
+            {/if}
+            
+            {#if extendedMeta.ISOSpeedRatings}
+              <div class="info-group">
+                <label>ISO Speed</label>
+                <span class="info-val">{extendedMeta.ISOSpeedRatings}</span>
+              </div>
+            {/if}
+            
+            {#if extendedMeta.FocalLength}
+              <div class="info-group">
+                <label>Focal Length</label>
+                <span class="info-val">{extendedMeta.FocalLength}</span>
+              </div>
+            {/if}
+          {/if}
+
+          <!-- Location Info Section -->
+          {#if extendedMeta.GPSLatitude || extendedMeta.GPSLongitude}
+            <div class="info-divider">Location Info</div>
+            
+            {#if extendedMeta.GPSLatitude}
+              <div class="info-group">
+                <label>GPS Latitude</label>
+                <span class="info-val">{extendedMeta.GPSLatitude} {extendedMeta.GPSLatitudeRef || ''}</span>
+              </div>
+            {/if}
+            
+            {#if extendedMeta.GPSLongitude}
+              <div class="info-group">
+                <label>GPS Longitude</label>
+                <span class="info-val">{extendedMeta.GPSLongitude} {extendedMeta.GPSLongitudeRef || ''}</span>
+              </div>
+            {/if}
+          {/if}
+        {/if}
+
+        {#if item.orientation > 1 && (!extendedMeta || !extendedMeta.Orientation)}
           <div class="info-group">
             <label>EXIF Orientation</label>
             <span class="info-val">Value {item.orientation}</span>
@@ -612,6 +703,17 @@
       display: flex;
       flex-direction: column;
       gap: 16px;
+  }
+  
+  .info-divider {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #66fcf1;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 12px 0 4px 0;
+      border-bottom: 1px solid rgba(102, 252, 241, 0.15);
+      padding-bottom: 4px;
   }
   
   .info-group {
