@@ -143,8 +143,8 @@ pub fn scan_directory_in_background(
             let _ = fs::create_dir_all(&thumb_dir);
         }
 
+        let existing_map = db::get_media_by_prefix(&db_path, &scan_path).unwrap_or_default();
         let _ = app.emit("scan_status", format!("Scanning started for: {}", scan_path));
-
         let mut batch = Vec::with_capacity(100);
         let mut total_scanned = 0;
 
@@ -183,23 +183,20 @@ pub fn scan_directory_in_background(
                 .and_then(|t| t.duration_since(std::time::SystemTime::UNIX_EPOCH).ok().map(|d| d.as_secs() as i64))
                 .unwrap_or(0);
             
-            let mut created_time = metadata.created()
+            let created_time = metadata.created()
                 .ok()
                 .and_then(|t| t.duration_since(std::time::SystemTime::UNIX_EPOCH).ok().map(|d| d.as_secs() as i64))
                 .unwrap_or(modified_time);
 
-            let thumbnail_path = None;
-            let mut orientation = 1;
+            let mut thumbnail_path = None;
+            let orientation = 1;
 
-            // Extract EXIF data if it is an image
-            if media_type == "image" {
-                let (exif_date, _, exif_orient) = get_exif_metadata(&path);
-                orientation = exif_orient;
-                if let Some(date) = exif_date {
-                    created_time = date;
+            if let Some((existing_mod, existing_t)) = existing_map.get(&file_path_str) {
+                if *existing_mod == modified_time {
+                    // File has not changed, skip indexing!
+                    continue;
                 }
-                
-                // We will generate rotated thumbnails lazily during grid display
+                thumbnail_path = existing_t.clone();
             }
 
             let item = MediaItem {

@@ -152,3 +152,24 @@ pub fn update_media_thumbnail(db_path: &PathBuf, file_path: &str, thumbnail_path
     )?;
     Ok(())
 }
+
+pub fn get_media_by_prefix(db_path: &PathBuf, prefix: &str) -> Result<std::collections::HashMap<String, (i64, Option<String>)>> {
+    let conn = Connection::open(db_path)?;
+    let mut stmt = conn.prepare(
+        "SELECT file_path, modified_time, thumbnail_path FROM media WHERE file_path LIKE ?1 || '%'"
+    )?;
+    
+    let item_iter = stmt.query_map(params![prefix], |row| {
+        let path: String = row.get(0)?;
+        let mod_time: i64 = row.get(1)?;
+        let thumb: Option<String> = row.get(2)?;
+        Ok((path, (mod_time, thumb)))
+    })?;
+    
+    let mut map = std::collections::HashMap::new();
+    for item in item_iter {
+        let (path, val) = item?;
+        map.insert(path, val);
+    }
+    Ok(map)
+}
