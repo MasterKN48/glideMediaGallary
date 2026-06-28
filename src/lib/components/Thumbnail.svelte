@@ -142,4 +142,5 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       color: var(--text-muted);
+  }
 </style>
