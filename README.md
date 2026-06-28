@@ -1,70 +1,89 @@
-# Glide: A Portable Media Gallery App
+# <img src="static/logo.svg" align="left" width="48" height="48" style="margin-right: 12px;" /> Glide: A Portable Media Gallery App
 
-Glide is an ultra-fast, lightweight cross-platform media gallery designed to scan and browse large local and external SSDs/HDDs smoothly at 60 FPS in an elegant glassmorphic dark mode. Built using a native **Rust/Tauri** backend and a **Svelte 5 (Vanilla JavaScript)** frontend.
+[![Tauri v2](https://img.shields.io/badge/Tauri-v2-FFC107?logo=tauri&logoColor=white&style=flat-square)](https://tauri.app/)
+[![Svelte 5](https://img.shields.io/badge/Svelte-5-FF3E00?logo=svelte&logoColor=white&style=flat-square)](https://svelte.dev/)
+[![Rust](https://img.shields.io/badge/Rust-1.75%2B-000000?logo=rust&logoColor=white&style=flat-square)](https://www.rust-lang.org/)
+[![Bun](https://img.shields.io/badge/Bun-v1.0-F9F1E7?logo=bun&logoColor=black&style=flat-square)](https://bun.sh/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+
+**Glide** is an ultra-fast, lightweight cross-platform desktop media gallery designed to scan and browse massive local directories, SSDs, and HDDs smoothly at 60 FPS in an elegant glassmorphic dark mode. Engineered using a high-performance native **Rust/Tauri** backend and a reactive **Svelte 5** SPA frontend.
+
+> **GitHub Description:** Ultra-fast, lightweight portable media gallery for local and external storage. Built with Tauri, Svelte 5, and Rust. Features parallel SSD scanning, EXIF extraction, custom grid virtualization, and a glassmorphic viewer with metadata panels.
 
 ---
 
-## ✨ Features & Architectural Optimizations
+## 🚀 Key Features
 
-To handle folders with tens of thousands of media files without UI stutter or heavy disk loading, the application implements the following optimizations:
+*   ⚡ **60+ FPS Scroll Performance:** Custom row-reusing virtualized grid handles folders containing tens of thousands of items with zero DOM overhead.
+*   🔍 **Instant Reactive Search:** Instantly filters indexed assets by filename as you type, with zero search lag.
+*   📸 **Extended EXIF Details:** Toggleable slide-out metadata drawer displaying Device Details (Model, Maker, OS), Camera Settings (Aperture, ISO, Focal Length, Shutter Speed), and GPS Location coordinates.
+*   📂 **Show in File Manager:** Open any media file directly in Finder (macOS) or File Explorer (Windows) via a native Tauri command.
+*   🔄 **Auto & Manual Orientation:** Extracts EXIF orientation headers to display images correctly and includes a manual `Rotate 90°` control.
+*   🎨 **Premium Glassmorphic Dark UI:** Smooth CSS transitions, spring-loaded hover animations, and a sleek web-based glowing startup splash screen.
+*   🗄️ **SQLite Local Cache:** Scanned directory indexes are persisted in a local database for lightning-fast subsequent launches (`<50ms`).
 
-### 1. Zero-DOM-Overhead Svelte 5 Frontend
-- Uses Svelte 5's compiled reactivity (Runes: `$state`, `$derived`, `$derived.by`) which updates the DOM surgically.
-- Avoids the runtime virtual DOM reconciliation overhead of React, saving CPU and memory.
-- Written entirely in vanilla JavaScript (no TypeScript compilation lag).
+---
 
-### 2. Custom Row-Based Grid Virtualization (60+ FPS Scrolling)
-- Implements a custom virtual grid wrapper. Instead of rendering thousands of image tags into the DOM (which leads to GPU choke and UI lagging), it dynamically calculates which rows are visible in the viewport and only renders those.
-- As the user scrolls, off-screen DOM nodes are recycled.
-- Employs `IntersectionObserver` to lazy-load media thumbnails only when they enter the scroll viewport.
+## 🛠️ Architectural Optimizations
 
-### 3. Parallel Directory Scanner (`jwalk` + `rayon`)
-- The Rust backend performs parallel directory traversal using a work-stealing thread pool, enabling high-speed directory walking on fast SSDs.
-- Streams files to Svelte progressively in batches of 100 items via Tauri IPC. The user starts seeing photos instantly as soon as the scan starts.
+### 1. Parallel Directory Walk (`jwalk` + `rayon`)
+The Rust backend traverses directories concurrently using a work-stealing thread pool. Found media items are streamed progressively to Svelte in batches of 100 via Tauri IPC events, allowing you to browse files instantly while scanning is still active in the background.
 
-### 4. Dual-Mode Thumbnail Pipeline
-- **EXIF Extraction:** For photos, Rust reads the EXIF header to extract embedded pre-rendered thumbnails in micro-seconds, bypassing full image decoding.
-- **Background Generation:** For images without EXIF thumbnails, Rust generates a compressed WebP/JPEG thumbnail in a background worker thread pool using the `image` crate upon Svelte viewport intersection.
-- **SQLite DB Caching:** Scanned folder structures, file metadata, and cached thumbnail paths are stored in a local SQLite database (`rusqlite`). Subsequent app starts load instantly in `<50ms`.
+### 2. Dual-Mode Thumbnail Pipeline
+- **EXIF Extraction:** For supported image types, Svelte requests thumbnails which Rust attempts to extract directly from the EXIF segment in microseconds, bypassing full image decoding.
+- **Background Decoding:** For other images, Rust decodes and resizes the files to compressed WebP thumbnails in a background worker pool using `tauri::async_runtime::spawn_blocking`, completely keeping the UI thread lag-free.
 
-### 5. Premium Glassmorphic Dark Theme
-- Styled entirely in Vanilla CSS using translucent colors, border gradients, and backdrop filters for a modern macOS glassmorphic aesthetic.
-- Includes a full-screen media lightbox supporting mouse zoom/pan, HTML5 video player, audio playback card, and responsive keyboard navigation (Esc to close, Left/Right arrow keys to browse, Space to play/pause video).
+### 3. DOM Recycle Grid Virtualization
+Instead of loading thousands of images into the browser DOM (which causes GPU memory choke), Glide's custom virtual grid calculates the viewport bounds and recycles off-screen rows. Intersection Observers trigger thumbnail requests only when an item enters the viewport.
 
 ---
 
 ## 📂 Project Structure
 
-- **`src-tauri/` (Rust Backend)**
-  - [`src/lib.rs`](src-tauri/src/lib.rs): Main entry point, command router, and plugin register.
-  - [`src/db.rs`](src-tauri/src/db.rs): SQLite database schema configuration and read/write helpers.
-  - [`src/scanner.rs`](src-tauri/src/scanner.rs): Parallel directory walk, EXIF parsing, and background thumbnail resizing.
-  - [`tauri.conf.json`](src-tauri/tauri.conf.json): Custom security settings, CSP configuration, and `asset://` local file protocol enabling.
-- **`src/` (Svelte JS Frontend)**
-  - [`routes/+page.svelte`](src/routes/+page.svelte): Layout skeleton, sidebar directories list, type filter tabs, and glassmorphic styles.
-  - [`lib/components/VirtualGrid.svelte`](src/lib/components/VirtualGrid.svelte): Grouping timeline (Day/Month/Year) and row-reversing grid virtualizer.
-  - [`lib/components/Thumbnail.svelte`](src/lib/components/Thumbnail.svelte): Viewport observer and dynamic thumbnail load trigger.
-  - [`lib/components/MediaPlayer.svelte`](src/lib/components/MediaPlayer.svelte): Image/Video/Audio lightbox viewer with pan/zoom and index browsing.
+```
+.
+├── src-tauri/                 # Rust Tauri Backend
+│   ├── capabilities/          # Security default.json granting Dialog and Window APIs
+│   ├── src/
+│   │   ├── lib.rs             # Tauri command declarations & app bootstrap
+│   │   ├── db.rs              # SQLite schema, indices, and query helpers
+│   │   └── scanner.rs         # Parallel file scanner, EXIF reader, & thumbnail engine
+│   └── Cargo.toml
+├── src/                       # Svelte 5 Frontend
+│   ├── lib/
+│   │   └── components/
+│   │       ├── VirtualGrid.svelte  # Grouped chronological virtualizer
+│   │       ├── Thumbnail.svelte    # viewport observer and orientation rotators
+│   │       └── MediaPlayer.svelte  # Lightbox with metadata drawers & pan/zoom
+│   ├── routes/
+│   │   └── +page.svelte       # Sidebar layout controls, search filters, and page skeleton
+│   └── app.html
+├── static/
+│   └── logo.svg               # High-contrast light brand icon
+└── package.json
+```
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-Ensure you have the following installed on your system:
-- **Bun** (recommended frontend runtime) or **Node.js**
-- **Rust** (Cargo compiler toolchain)
+Make sure you have the following installed on your developer machine:
+- [Rust & Cargo compiler toolchain](https://www.rust-lang.org/tools/install)
+- [Bun](https://bun.sh/) (recommended) or Node.js
 
 ### How to Run Locally
+
 1. Clone the repository and navigate to the project directory:
    ```bash
-   cd MyMediaGallaryApp
+   git clone https://github.com/MasterKN48/glideMediaGallary.git
+   cd glideMediaGallary
    ```
-2. Install the node/bun dependencies:
+2. Install the node dependencies:
    ```bash
    bun install
    ```
-3. Launch the desktop application in development mode:
+3. Run the application in development mode:
    ```bash
    bun run tauri dev
    ```
@@ -75,3 +94,8 @@ To build a production-ready, self-contained desktop bundle (`.app` for macOS, `.
 bun run tauri build
 ```
 The compiled binaries will be outputted to `src-tauri/target/release/bundle/`.
+
+---
+
+## 📜 License
+Distributed under the MIT License. See [LICENSE](LICENSE) for more details.
