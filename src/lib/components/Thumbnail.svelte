@@ -88,7 +88,7 @@
       width: 100%;
       height: 100%;
       position: relative;
-      background: rgba(255, 255, 255, 0.02);
+      background: var(--surface);
       border-radius: 8px;
       overflow: hidden;
       display: flex;
@@ -98,7 +98,7 @@
   }
   .thumb-container:hover {
       transform: scale(1.03);
-      box-shadow: 0 4px 15px rgba(102, 252, 241, 0.3);
+      box-shadow: 0 4px 15px var(--accent-fill);
   }
   .media-thumb {
       width: 100%;
@@ -110,7 +110,7 @@
   .skeleton {
       width: 100%;
       height: 100%;
-      background: linear-gradient(90deg, rgba(255,255,255,0.01) 25%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.01) 75%);
+      background: linear-gradient(90deg, var(--skeleton-start) 25%, var(--skeleton-mid) 50%, var(--skeleton-start) 75%);
       background-size: 200% 100%;
       animation: loading 1.5s infinite;
   }
@@ -125,11 +125,11 @@
       justify-content: center;
       width: 100%;
       height: 100%;
-      background: rgba(20, 20, 25, 0.7);
-      color: #66fcf1;
+      background: var(--placeholder-bg);
+      color: var(--accent);
       padding: 10px;
       text-align: center;
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--surface-border-elevated);
       border-radius: 8px;
   }
   .play-icon, .audio-icon {
@@ -138,7 +138,7 @@
       fill: currentColor;
       margin-bottom: 6px;
       opacity: 0.85;
-      filter: drop-shadow(0 0 4px rgba(102, 252, 241, 0.4));
+      filter: drop-shadow(0 0 4px var(--accent-glow));
   }
   .file-name {
       font-size: 0.7rem;
@@ -146,6 +146,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      color: #a8a8af;
+      color: var(--text-muted);
   }
 </style>

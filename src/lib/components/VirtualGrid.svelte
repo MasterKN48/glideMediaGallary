@@ -196,20 +196,20 @@
       scroll-behavior: smooth;
       /* Custom elegant scrollbar */
       scrollbar-width: thin;
-      scrollbar-color: rgba(102, 252, 241, 0.2) rgba(0, 0, 0, 0.2);
+      scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   }
   .virtual-grid-container::-webkit-scrollbar {
       width: 6px;
   }
   .virtual-grid-container::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.1);
+      background: var(--scrollbar-track);
   }
   .virtual-grid-container::-webkit-scrollbar-thumb {
-      background-color: rgba(102, 252, 241, 0.2);
+      background-color: var(--scrollbar-thumb);
       border-radius: 3px;
   }
   .virtual-grid-container::-webkit-scrollbar-thumb:hover {
-      background-color: rgba(102, 252, 241, 0.4);
+      background-color: var(--scrollbar-thumb-hover);
   }
   
   .scroll-filler {
@@ -224,7 +224,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid var(--surface-border-elevated);
       padding-bottom: 6px;
       margin-bottom: 12px;
       user-select: none;
@@ -234,18 +234,18 @@
   .grid-section-header h2 {
       font-size: 1.15rem;
       font-weight: 600;
-      color: #ffffff;
+      color: var(--text-primary);
       margin: 0;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      text-shadow: var(--shadow-text);
   }
   
   .count-badge {
       font-size: 0.8rem;
-      color: #66fcf1;
-      background: rgba(102, 252, 241, 0.1);
+      color: var(--accent);
+      background: var(--accent-subtle);
       padding: 2px 8px;
       border-radius: 12px;
-      border: 1px solid rgba(102, 252, 241, 0.2);
+      border: 1px solid var(--accent-border);
   }
   
   .grid-media-row {
@@ -272,14 +272,14 @@
       align-items: center;
       justify-content: center;
       height: 70%;
-      color: #c5c6c7;
+      color: var(--text-subtle);
       text-align: center;
       padding: 20px;
   }
   .empty-icon {
       width: 64px;
       height: 64px;
-      fill: rgba(102, 252, 241, 0.3);
+      fill: var(--accent-fill);
       margin-bottom: 16px;
   }
   .empty-state p {
