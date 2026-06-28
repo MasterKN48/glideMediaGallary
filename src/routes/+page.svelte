@@ -37,6 +37,7 @@
   // App state using Svelte 5 runes
   let folders = $state([]);
   let media = $state([]);
+  const loadedPaths = new Set();
   let activeFilter = $state("all"); // "all" | "image" | "video" | "audio"
   let viewMode = $state("day"); // "day" | "month" | "year"
   let isWindowFullscreen = $state(false);
@@ -98,6 +99,10 @@
       const [dbFolders, dbMedia] = await invoke("init_app");
       folders = dbFolders;
       media = dbMedia;
+      loadedPaths.clear();
+      for (const item of dbMedia) {
+        loadedPaths.add(item.file_path);
+      }
     } catch (err) {
       console.error("Failed to load initial data:", err);
     }
@@ -133,7 +138,13 @@
     try {
       const updatedFolders = await invoke("remove_folder", { path });
       folders = updatedFolders;
-      media = media.filter(item => !item.file_path.startsWith(path));
+      media = media.filter(item => {
+        const keep = !item.file_path.startsWith(path);
+        if (!keep) {
+          loadedPaths.delete(item.file_path);
+        }
+        return keep;
+      });
     } catch (err) {
       console.error("Failed to remove folder:", err);
     }
@@ -178,20 +189,29 @@
     // Listen to background scanning progress
     const unsubBatch = listen("scanned_batch", (event) => {
       const batch = event.payload;
-      // Merge batch into media state. Ensure no duplicate file paths
-      media = [...media, ...batch].reduce((acc, current) => {
-        const exists = acc.find(item => item.file_path === current.file_path);
-        if (!exists) {
-          acc.push(current);
-        } else {
-          // Keep the one with thumbnail if available
-          if (current.thumbnail_path) {
-            const idx = acc.indexOf(exists);
-            acc[idx] = current;
+      const newItems = [];
+      const updatedItems = [];
+
+      for (const current of batch) {
+        if (!loadedPaths.has(current.file_path)) {
+          loadedPaths.add(current.file_path);
+          newItems.push(current);
+        } else if (current.thumbnail_path) {
+          const idx = media.findIndex(item => item.file_path === current.file_path);
+          if (idx !== -1 && !media[idx].thumbnail_path) {
+            updatedItems.push({ idx, item: current });
           }
         }
-        return acc;
-      }, []);
+      }
+
+      if (newItems.length > 0 || updatedItems.length > 0) {
+        for (const { idx, item } of updatedItems) {
+          media[idx] = item;
+        }
+        if (newItems.length > 0) {
+          media = [...media, ...newItems];
+        }
+      }
     });
 
     const unsubStatus = listen("scan_status", (event) => {
