@@ -282,55 +282,6 @@ pub async fn get_or_create_thumbnail(app: AppHandle, file_path: String) -> Resul
             thumbnail.write_to(&mut out_file, image::ImageFormat::Jpeg)
                 .map_err(|e| e.to_string())?;
             Ok(())
-        } else if media_type == "video" {
-            // 1. Try qlmanage on macOS
-            #[cfg(target_os = "macos")]
-            {
-                let output_dir = full_thumb_path_clone.parent().ok_or_else(|| "Invalid cache path".to_string())?;
-                let filename = path.file_name().ok_or_else(|| "Invalid file name".to_string())?.to_string_lossy().to_string();
-                
-                let status = std::process::Command::new("qlmanage")
-                    .arg("-t")
-                    .arg("-s")
-                    .arg("250")
-                    .arg("-o")
-                    .arg(output_dir)
-                    .arg(&file_path_clone)
-                    .status();
-                    
-                if let Ok(s) = status {
-                    if s.success() {
-                        let generated_path = output_dir.join(format!("{}.png", filename));
-                        if generated_path.exists() {
-                            if fs::rename(&generated_path, &full_thumb_path_clone).is_ok() {
-                                return Ok(());
-                            }
-                        }
-                    }
-                }
-            }
-            
-            // 2. Try ffmpeg as a cross-platform fallback
-            let status = std::process::Command::new("ffmpeg")
-                .arg("-y")
-                .arg("-i")
-                .arg(&file_path_clone)
-                .arg("-ss")
-                .arg("00:00:01")
-                .arg("-vframes")
-                .arg("1")
-                .arg("-vf")
-                .arg("scale=250:250:force_original_aspect_ratio=decrease")
-                .arg(&full_thumb_path_clone)
-                .status();
-                
-            if let Ok(s) = status {
-                if s.success() {
-                    return Ok(());
-                }
-            }
-            
-            Err("Could not generate video thumbnail frame".to_string())
         } else {
             Err("Unsupported media type for thumbnail generation".to_string())
         }
