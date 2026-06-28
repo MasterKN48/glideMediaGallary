@@ -966,7 +966,7 @@
       align-items: center;
   }
   
-  .search-icon {
+  :global(.search-icon) {
       position: absolute;
       left: 14px;
       color: var(--text-faint);
