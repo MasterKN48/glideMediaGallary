@@ -3,22 +3,17 @@
   import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 
   let { item } = $props();
-  let imgSrc = $state(item.thumbnail_path ? convertFileSrc(item.thumbnail_path) : "");
-  let loading = $state(item.thumbnail_path ? false : true);
+  let imgSrc = $state(
+      item.thumbnail_path 
+          ? convertFileSrc(item.thumbnail_path) 
+          : (item.media_type === "image" ? convertFileSrc(item.file_path) : "")
+  );
+  let loading = $state(false);
   let el = $state(null);
-  let loaded = $state(item.thumbnail_path ? true : false);
+  let loaded = $state(true);
 
   async function loadThumbnail() {
-      if (item.media_type !== "image") {
-          // Video or audio placeholder
-          loading = false;
-          return;
-      }
-
-      if (item.thumbnail_path) {
-          imgSrc = convertFileSrc(item.thumbnail_path);
-          loading = false;
-          loaded = true;
+      if (item.media_type !== "image" || item.thumbnail_path) {
           return;
       }
 
@@ -27,14 +22,8 @@
           const cachedPath = await invoke("get_or_create_thumbnail", { filePath: item.file_path });
           imgSrc = convertFileSrc(cachedPath);
           item.thumbnail_path = cachedPath;
-          loaded = true;
       } catch (err) {
           console.error("Failed to generate thumbnail:", err);
-          // Fallback to original image if generation fails
-          imgSrc = convertFileSrc(item.file_path);
-          loaded = true;
-      } finally {
-          loading = false;
       }
   }
 
