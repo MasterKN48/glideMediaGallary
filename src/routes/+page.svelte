@@ -23,7 +23,9 @@
     Loader2, 
     CheckCircle2,
     Maximize2,
-    Minimize2
+    Minimize2,
+    Search,
+    X
   } from "lucide-svelte";
 
   // App window instance
@@ -43,12 +45,15 @@
   // Selected item for modal viewer
   let selectedItem = $state(null);
   let isInitializing = $state(true);
+  let searchQuery = $state("");
 
-  // Filtered media list based on sidebar filters
+  // Filtered media list based on sidebar filters and search query
   let filteredMedia = $derived(
-    activeFilter === "all" 
-      ? media 
-      : media.filter(item => item.media_type === activeFilter)
+    media.filter(item => {
+      const matchesFilter = activeFilter === "all" || item.media_type === activeFilter;
+      const matchesSearch = searchQuery === "" || item.filename.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesFilter && matchesSearch;
+    })
   );
 
   // Navigation indexes for full screen viewer
@@ -211,6 +216,21 @@
       <FolderPlus class="btn-icon" size={18} />
       Add Folder to Scan
     </button>
+
+    <div class="search-box">
+      <Search size={16} class="search-icon" />
+      <input 
+        type="text" 
+        placeholder="Search media by name..." 
+        bind:value={searchQuery}
+        class="search-input"
+      />
+      {#if searchQuery}
+        <button class="clear-search-btn" onclick={() => searchQuery = ""} title="Clear Search">
+          <X size={14} />
+        </button>
+      {/if}
+    </div>
 
     <div class="section-title">Indexed Folders</div>
     <div class="folders-list">
@@ -736,5 +756,70 @@
   @keyframes loadingBar {
       0% { left: -60px; }
       100% { left: 160px; }
+  }
+
+  /* Glassmorphic Search Box */
+  .search-box {
+      position: relative;
+      width: 100%;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+  }
+  
+  .search-icon {
+      position: absolute;
+      left: 12px;
+      color: #88888e;
+      pointer-events: none;
+      transition: color 0.25s;
+  }
+  
+  .search-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 10px;
+      padding: 10px 36px 10px 36px;
+      color: #ffffff;
+      font-size: 0.82rem;
+      outline: none;
+      transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  
+  .search-input::placeholder {
+      color: #66666e;
+  }
+  
+  .search-input:focus {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(102, 252, 241, 0.35);
+      box-shadow: 0 0 12px rgba(102, 252, 241, 0.1);
+  }
+  
+  .search-input:focus + :global(.search-icon) {
+      color: #66fcf1;
+  }
+  
+  .clear-search-btn {
+      position: absolute;
+      right: 10px;
+      background: none;
+      border: none;
+      color: #88888e;
+      cursor: pointer;
+      padding: 0;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s;
+  }
+  
+  .clear-search-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.08);
   }
 </style>

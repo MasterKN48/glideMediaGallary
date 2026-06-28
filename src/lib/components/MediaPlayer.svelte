@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte";
-  import { convertFileSrc } from "@tauri-apps/api/core";
+  import { convertFileSrc, invoke } from "@tauri-apps/api/core";
   import { getCurrentWindow } from "@tauri-apps/api/window";
   import { fade, scale } from "svelte/transition";
   
@@ -15,7 +15,9 @@
     ChevronLeft, 
     ChevronRight,
     RefreshCw,
-    Music
+    Music,
+    Info,
+    ExternalLink
   } from "lucide-svelte";
 
   let { item, onNext, onPrev, onClose } = $props();
@@ -44,12 +46,16 @@
   // Cross-fade loaded state for smooth image switching
   let viewerImageLoaded = $state(false);
 
-  // Reset zoom, manual rotation, and loaded state when switching items
+  // File info panel state
+  let showInfoPanel = $state(false);
+
+  // Reset zoom, manual rotation, loaded state, and info panel when switching items
   $effect(() => {
     if (item) {
       manualRotation = 0;
       resetZoom();
       viewerImageLoaded = false;
+      showInfoPanel = false;
     }
   });
 
@@ -76,6 +82,8 @@
       toggleTauriFullscreen();
     } else if (e.key === "r" || e.key === "R") {
       rotateCw();
+    } else if (e.key === "i" || e.key === "I") {
+      showInfoPanel = !showInfoPanel;
     }
   }
 
@@ -95,6 +103,14 @@
 
   function rotateCw() {
     manualRotation = (manualRotation + 90) % 360;
+  }
+
+  async function handleRevealInFinder() {
+    try {
+      await invoke("reveal_in_finder", { path: item.file_path });
+    } catch (err) {
+      console.error("Failed to reveal file in folder explorer:", err);
+    }
   }
 
   async function toggleTauriFullscreen() {
@@ -197,6 +213,10 @@
         </button>
       {/if}
 
+      <button class="icon-btn {showInfoPanel ? 'active' : ''}" onclick={() => showInfoPanel = !showInfoPanel} title="View Information (I)">
+        <Info size={18} />
+      </button>
+
       <button class="icon-btn" onclick={toggleTauriFullscreen} title="Toggle Fullscreen (F)">
         {#if isFullscreenState}
           <Minimize2 size={18} />
@@ -271,6 +291,64 @@
       </div>
     {/if}
   </div>
+
+  <!-- Slide-out Glassmorphic Info Panel -->
+  {#if showInfoPanel}
+    <div class="info-panel" transition:scale={{ duration: 200, start: 0.95 }}>
+      <div class="info-header">
+        <h3>File Details</h3>
+        <button class="close-info-btn" onclick={() => showInfoPanel = false} title="Close Info">
+          <X size={16} />
+        </button>
+      </div>
+      
+      <div class="info-body">
+        <div class="info-group">
+          <label>File Name</label>
+          <span class="info-val">{item.filename}</span>
+        </div>
+        
+        <div class="info-group">
+          <label>File Path</label>
+          <span class="info-val path-val">{item.file_path}</span>
+        </div>
+        
+        <div class="info-group">
+          <label>File Size</label>
+          <span class="info-val">{(item.size / (1024 * 1024)).toFixed(2)} MB ({item.size.toLocaleString()} bytes)</span>
+        </div>
+        
+        <div class="info-group">
+          <label>Media Type</label>
+          <span class="info-val capitalize">{item.media_type}</span>
+        </div>
+        
+        <div class="info-group">
+          <label>Date Created</label>
+          <span class="info-val">{new Date(item.created_time * 1000).toLocaleString()}</span>
+        </div>
+        
+        <div class="info-group">
+          <label>Date Modified</label>
+          <span class="info-val">{new Date(item.modified_time * 1000).toLocaleString()}</span>
+        </div>
+
+        {#if item.orientation > 1}
+          <div class="info-group">
+            <label>EXIF Orientation</label>
+            <span class="info-val">Value {item.orientation}</span>
+          </div>
+        {/if}
+      </div>
+      
+      <div class="info-footer">
+        <button class="reveal-btn" onclick={handleRevealInFinder}>
+          <ExternalLink size={14} />
+          Show in File Manager
+        </button>
+      </div>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -345,6 +423,11 @@
   }
   .icon-btn:active {
       transform: translateY(0);
+  }
+  .icon-btn.active {
+      color: #66fcf1;
+      border-color: rgba(102, 252, 241, 0.45);
+      background: rgba(102, 252, 241, 0.12);
   }
   
   .close-btn:hover {
@@ -474,6 +557,116 @@
   .viewer-audio {
       width: 100%;
       outline: none;
+  }
+
+  /* Slide-out Glassmorphic Info Panel */
+  .info-panel {
+      position: absolute;
+      right: 24px;
+      top: 120px;
+      bottom: 40px;
+      width: 340px;
+      background: rgba(13, 13, 18, 0.85);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      z-index: 1015;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  }
+  
+  .info-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+  }
+  .info-header h3 {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #ffffff;
+      font-weight: 600;
+  }
+  .close-info-btn {
+      background: none;
+      border: none;
+      color: #88888e;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
+  }
+  .close-info-btn:hover {
+      color: #ffffff;
+  }
+  
+  .info-body {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+  }
+  
+  .info-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+  }
+  .info-group label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #88888e;
+      letter-spacing: 0.5px;
+  }
+  .info-val {
+      font-size: 0.85rem;
+      color: #e2e2e9;
+      word-break: break-all;
+  }
+  .info-val.path-val {
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: #a8a8af;
+      line-height: 1.4;
+  }
+  .info-val.capitalize {
+      text-transform: capitalize;
+  }
+  
+  .info-footer {
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  .reveal-btn {
+      width: 100%;
+      background: rgba(102, 252, 241, 0.06);
+      border: 1px solid rgba(102, 252, 241, 0.2);
+      color: #66fcf1;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.25s ease;
+      outline: none;
+  }
+  .reveal-btn:hover {
+      background: rgba(102, 252, 241, 0.12);
+      border-color: rgba(102, 252, 241, 0.4);
+      box-shadow: 0 0 12px rgba(102, 252, 241, 0.15);
   }
 
   /* Fullscreen Active Mode adjustments */
