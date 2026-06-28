@@ -3,12 +3,10 @@
   import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 
   let { item } = $props();
-  let imgSrc = $state("");
-  let loading = $state(true);
+  let imgSrc = $state(item.thumbnail_path ? convertFileSrc(item.thumbnail_path) : "");
+  let loading = $state(item.thumbnail_path ? false : true);
   let el = $state(null);
-  let loaded = $state(false);
-
-
+  let loaded = $state(item.thumbnail_path ? true : false);
 
   async function loadThumbnail() {
       if (item.media_type !== "image") {
@@ -20,6 +18,7 @@
       if (item.thumbnail_path) {
           imgSrc = convertFileSrc(item.thumbnail_path);
           loading = false;
+          loaded = true;
           return;
       }
 
@@ -28,16 +27,22 @@
           const cachedPath = await invoke("get_or_create_thumbnail", { filePath: item.file_path });
           imgSrc = convertFileSrc(cachedPath);
           item.thumbnail_path = cachedPath;
+          loaded = true;
       } catch (err) {
           console.error("Failed to generate thumbnail:", err);
           // Fallback to original image if generation fails
           imgSrc = convertFileSrc(item.file_path);
+          loaded = true;
       } finally {
           loading = false;
       }
   }
 
   onMount(() => {
+      if (item.thumbnail_path || item.media_type !== "image") {
+          return;
+      }
+
       const observer = new IntersectionObserver((entries) => {
           if (entries[0].isIntersecting) {
               loadThumbnail();
