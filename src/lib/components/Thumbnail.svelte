@@ -8,12 +8,7 @@
   let el = $state(null);
   let loaded = $state(false);
 
-  let rotationTransform = $derived(
-    item.orientation === 3 ? "rotate(180deg)" :
-    item.orientation === 6 ? "rotate(90deg)" :
-    item.orientation === 8 ? "rotate(270deg)" :
-    "rotate(0deg)"
-  );
+
 
   async function loadThumbnail() {
       if (item.media_type !== "image") {
@@ -66,7 +61,7 @@
       src={imgSrc} 
       alt={item.filename} 
       class="media-thumb" 
-      style="transform: {rotationTransform} scale({loaded ? 1 : 0.95}); opacity: {loaded ? 1 : 0};" 
+      style="transform: scale({loaded ? 1 : 0.95}); opacity: {loaded ? 1 : 0};" 
       onload={() => loaded = true}
       loading="lazy" 
     />

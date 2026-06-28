@@ -1,6 +1,6 @@
 use jwalk::WalkDir;
 use std::fs::{self, File};
-use std::io::{BufReader, Write};
+use std::io::BufReader;
 use std::path::Path;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -188,26 +188,18 @@ pub fn scan_directory_in_background(
                 .and_then(|t| t.duration_since(std::time::SystemTime::UNIX_EPOCH).ok().map(|d| d.as_secs() as i64))
                 .unwrap_or(modified_time);
 
-            let mut thumbnail_path = None;
+            let thumbnail_path = None;
             let mut orientation = 1;
 
             // Extract EXIF data if it is an image
             if media_type == "image" {
-                let (exif_date, exif_thumb, exif_orient) = get_exif_metadata(&path);
+                let (exif_date, _, exif_orient) = get_exif_metadata(&path);
                 orientation = exif_orient;
                 if let Some(date) = exif_date {
                     created_time = date;
                 }
                 
-                // If there is an EXIF thumbnail, write it to cache instantly
-                if let Some(bytes) = exif_thumb {
-                    let thumb_filename = format!("{}.jpg", hash_path(&file_path_str));
-                    let full_thumb_path = thumb_dir.join(&thumb_filename);
-                    if let Ok(mut file) = File::create(&full_thumb_path) {
-                        let _ = file.write_all(&bytes);
-                        thumbnail_path = Some(full_thumb_path.to_string_lossy().to_string());
-                    }
-                }
+                // We will generate rotated thumbnails lazily during grid display
             }
 
             let item = MediaItem {
@@ -239,6 +231,19 @@ pub fn scan_directory_in_background(
 
         let _ = app.emit("scan_status", format!("Scanning completed. Total items scanned: {}", total_scanned));
     });
+}
+
+fn apply_orientation(img: image::DynamicImage, orientation: u32) -> image::DynamicImage {
+    match orientation {
+        2 => img.fliph(),
+        3 => img.rotate180(),
+        4 => img.flipv(),
+        5 => img.fliph().rotate270(),
+        6 => img.rotate90(),
+        7 => img.fliph().rotate90(),
+        8 => img.rotate270(),
+        _ => img,
+    }
 }
 
 #[tauri::command]
@@ -275,6 +280,9 @@ pub async fn get_or_create_thumbnail(app: AppHandle, file_path: String) -> Resul
                 .map_err(|e| e.to_string())?
                 .decode()
                 .map_err(|e| e.to_string())?;
+                
+            let (_, _, orientation) = get_exif_metadata(path);
+            let img = apply_orientation(img, orientation);
                 
             let thumbnail = img.thumbnail(250, 250);
             
