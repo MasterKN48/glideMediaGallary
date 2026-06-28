@@ -16,8 +16,7 @@
   );
 
   async function loadThumbnail() {
-      if (item.media_type !== "image") {
-          // Video or audio placeholder
+      if (item.media_type === "audio") {
           loading = false;
           return;
       }
@@ -35,8 +34,10 @@
           item.thumbnail_path = cachedPath;
       } catch (err) {
           console.error("Failed to generate thumbnail:", err);
-          // Fallback to original image if generation fails
-          imgSrc = convertFileSrc(item.file_path);
+          if (item.media_type === "image") {
+              // Fallback to original image only if it is an image file
+              imgSrc = convertFileSrc(item.file_path);
+          }
       } finally {
           loading = false;
       }
@@ -61,7 +62,7 @@
 <div bind:this={el} class="thumb-container">
   {#if loading}
     <div class="skeleton"></div>
-  {:else if item.media_type === "image"}
+  {:else if imgSrc}
     <img 
       src={imgSrc} 
       alt={item.filename} 
@@ -70,6 +71,11 @@
       onload={() => loaded = true}
       loading="lazy" 
     />
+    {#if item.media_type === "video"}
+      <div class="video-badge">
+        <svg viewBox="0 0 24 24" class="play-badge-icon"><path d="M8 5v14l11-7z"/></svg>
+      </div>
+    {/if}
   {:else if item.media_type === "video"}
     <div class="video-placeholder">
       <svg viewBox="0 0 24 24" class="play-icon"><path d="M8 5v14l11-7z"/></svg>
@@ -147,5 +153,36 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       color: var(--text-muted);
+  }
+  .video-badge {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+      z-index: 2;
+      transition: background-color 0.2s;
+  }
+  .thumb-container:hover .video-badge {
+      background: var(--accent);
+      border-color: var(--accent);
+  }
+  .thumb-container:hover .play-badge-icon {
+      fill: #000000;
+  }
+  .play-badge-icon {
+      width: 12px;
+      height: 12px;
+      fill: #ffffff;
+      transition: fill 0.2s;
   }
 </style>
