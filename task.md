@@ -56,3 +56,4 @@
 - [x] Add Cargo release profile size optimizations (LTO, strip, codegen-units, panic = abort) to shrink the final compiled app binary size <!-- id: 7.20 -->
 - [x] Add publisher, copyright, author email, and github repo metadata parameters to app packaging templates <!-- id: 7.21 -->
 - [x] Fix Svelte selector scope to position the sidebar search icon inside the input field <!-- id: 7.22 -->
+- [x] Capitalize app binary name to Glide in Cargo.toml for proper capitalization in macOS Dock and menu bar <!-- id: 7.23 -->
