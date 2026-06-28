@@ -367,8 +367,8 @@
   
   .sidebar-header {
       display: flex;
-      align-items: flex-start;
-      gap: 12px;
+      align-items: center;
+      gap: 14px;
       margin-bottom: 30px;
   }
   
@@ -387,15 +387,14 @@
   }
 
   .logo-image {
-      width: 26px;
-      height: 26px;
+      width: 46px;
+      height: 46px;
       flex-shrink: 0;
-      filter: drop-shadow(0 0 4px rgba(102, 252, 241, 0.4));
-      margin-top: 2px;
+      filter: drop-shadow(0 0 8px rgba(102, 252, 241, 0.45));
   }
   
   .sidebar-header h1 {
-      font-size: 1.25rem;
+      font-size: 1.35rem;
       font-weight: 700;
       color: #ffffff;
       margin: 0;
@@ -769,7 +768,7 @@
   
   .search-icon {
       position: absolute;
-      left: 12px;
+      left: 14px;
       color: #88888e;
       pointer-events: none;
       transition: color 0.25s;
@@ -780,7 +779,7 @@
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid rgba(255, 255, 255, 0.04);
       border-radius: 10px;
-      padding: 10px 36px 10px 36px;
+      padding: 10px 36px 10px 42px;
       color: #ffffff;
       font-size: 0.82rem;
       outline: none;
