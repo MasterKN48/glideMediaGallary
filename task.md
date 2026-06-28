@@ -45,3 +45,4 @@
 - [x] Add manual rotation button (`RotateCw`) for user-driven orientation correction <!-- id: 7.9 -->
 - [x] Fix scrolling and thumbnail generation UI hanging by shifting heavy image operations to Tauri's async runtime spawn_blocking <!-- id: 7.10 -->
 - [x] Add smooth high-performance CSS transitions, Svelte mount animations, and micro-interactions <!-- id: 7.11 -->
+- [x] Fix fullscreen button not working by adding window capabilities (core:window:allow-set-fullscreen and core:window:allow-is-fullscreen) to default.json <!-- id: 7.12 -->
