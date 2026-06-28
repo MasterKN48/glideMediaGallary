@@ -1,8 +1,7 @@
 use jwalk::WalkDir;
 use std::fs::{self, File};
 use std::io::{BufReader, Write};
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::path::Path;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use tauri::{AppHandle, Emitter, Manager};
