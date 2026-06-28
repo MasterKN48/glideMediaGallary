@@ -32,3 +32,7 @@
 - [x] Connect Svelte frontend events to Tauri IPC rust commands <!-- id: 6.1 -->
 - [x] Add native macOS QuickLook/Thumbnailing integration via `objc2` bindings <!-- id: 6.2 -->
 - [x] Profile scroll speed and optimize transitions to ensure solid 60 FPS <!-- id: 6.3 -->
+
+## Resolved Issues
+- [x] Fix Svelte file type errors by disabling checkJs in jsconfig.json <!-- id: 7.1 -->
+- [x] Fix "Add Folder to Scan" dialog not opening by adding dialog capability to default.json <!-- id: 7.2 -->
