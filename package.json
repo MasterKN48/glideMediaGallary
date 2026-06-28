@@ -1,8 +1,14 @@
 {
-  "name": "tauri-app",
+  "name": "glide",
   "version": "0.1.0",
-  "description": "",
+  "description": "Ultra-fast portable media gallery app",
   "type": "module",
+  "author": "MasterKN48 <masterkn48@gmail.com>",
+  "homepage": "https://github.com/MasterKN48/glideMediaGallary",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MasterKN48/glideMediaGallary.git"
+  },
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",

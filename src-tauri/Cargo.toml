@@ -1,8 +1,9 @@
 [package]
-name = "tauri-app"
+name = "glide"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "Ultra-fast portable media gallery"
+authors = ["MasterKN48 <masterkn48@gmail.com>"]
+homepage = "https://github.com/MasterKN48/glideMediaGallary"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
