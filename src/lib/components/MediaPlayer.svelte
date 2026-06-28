@@ -149,16 +149,24 @@
     };
     document.addEventListener("fullscreenchange", onFsChange);
 
+    const handleResize = async () => {
+      try {
+        isFullscreenState = await appWindow.isFullscreen() || !!document.fullscreenElement;
+      } catch (_) {}
+    };
+    window.addEventListener("resize", handleResize);
+
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("fullscreenchange", onFsChange);
+      window.removeEventListener("resize", handleResize);
     };
   });
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div 
-  class="media-player-overlay" 
+  class="media-player-overlay {isFullscreenState ? 'fullscreen-active' : ''}" 
   role="dialog"
   onmousedown={(e) => { if (e.target === e.currentTarget) onClose(); }}
   transition:fade={{ duration: 200 }}
@@ -466,5 +474,46 @@
   .viewer-audio {
       width: 100%;
       outline: none;
+  }
+
+  /* Fullscreen Active Mode adjustments */
+  .fullscreen-active .player-top-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      opacity: 0;
+      z-index: 1020;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0) 100%);
+      border-bottom: none;
+      transition: opacity 0.3s ease;
+  }
+  .fullscreen-active .player-top-bar:hover {
+      opacity: 1;
+  }
+  
+  .fullscreen-active .media-content-container {
+      padding-top: 0;
+  }
+  
+  .fullscreen-active .viewer-image {
+      max-width: 100vw;
+      max-height: 100vh;
+      border-radius: 0;
+      box-shadow: none;
+  }
+  
+  .fullscreen-active .viewer-image.rotated-90-deg {
+      max-width: 100vh;
+      max-height: 100vw;
+  }
+  
+  .fullscreen-active .viewer-video {
+      max-width: 100vw;
+      max-height: 100vh;
+      width: 100%;
+      height: 100%;
+      border-radius: 0;
+      box-shadow: none;
   }
 </style>
