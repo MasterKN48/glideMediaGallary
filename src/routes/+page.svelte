@@ -4,6 +4,7 @@
   import { listen } from "@tauri-apps/api/event";
   import { open } from "@tauri-apps/plugin-dialog";
   import { getCurrentWindow } from "@tauri-apps/api/window";
+  import { fade } from "svelte/transition";
   
   // Svelte Component imports
   import VirtualGrid from "../lib/components/VirtualGrid.svelte";
@@ -41,6 +42,7 @@
 
   // Selected item for modal viewer
   let selectedItem = $state(null);
+  let isInitializing = $state(true);
 
   // Filtered media list based on sidebar filters
   let filteredMedia = $derived(
@@ -117,7 +119,17 @@
   }
 
   onMount(() => {
-    loadInitialData();
+    const startTime = Date.now();
+
+    loadInitialData().then(() => {
+      const elapsed = Date.now() - startTime;
+      const delay = Math.max(1200 - elapsed, 0);
+      setTimeout(() => {
+        isInitializing = false;
+      }, delay);
+    }).catch(() => {
+      isInitializing = false;
+    });
 
     // Check initial window fullscreen state
     appWindow.isFullscreen().then(val => {
@@ -281,6 +293,19 @@
     />
   {/if}
 </main>
+
+{#if isInitializing}
+  <div class="splash-screen" transition:fade={{ duration: 300 }}>
+    <div class="splash-content">
+      <img src="/logo.svg" class="splash-logo" alt="Glide Logo" />
+      <h1 class="splash-title">Glide</h1>
+      <p class="splash-tagline">Initializing media library...</p>
+      <div class="splash-spinner">
+        <div class="spinner-bar"></div>
+      </div>
+    </div>
+  </div>
+{/if}
 
 <style>
   :global(body) {
@@ -638,5 +663,78 @@
   .grid-content {
       flex: 1;
       overflow: hidden;
+  }
+
+  /* Opening Splash Screen */
+  .splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #07070a;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+  }
+  
+  .splash-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+  }
+  
+  .splash-logo {
+      width: 96px;
+      height: 96px;
+      margin-bottom: 24px;
+      animation: pulseGlow 2.5s infinite alternate ease-in-out;
+  }
+  
+  @keyframes pulseGlow {
+      0% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(102, 252, 241, 0.4)); }
+      100% { transform: scale(1.06); filter: drop-shadow(0 0 24px rgba(102, 252, 241, 0.8)); }
+  }
+  
+  .splash-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #ffffff;
+      margin: 0 0 8px 0;
+      letter-spacing: -1px;
+      font-family: system-ui, sans-serif;
+  }
+  
+  .splash-tagline {
+      font-size: 0.9rem;
+      color: #a8a8af;
+      margin: 0 0 32px 0;
+  }
+  
+  .splash-spinner {
+      width: 160px;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+  }
+  
+  .spinner-bar {
+      width: 60px;
+      height: 100%;
+      background: #66fcf1;
+      position: absolute;
+      border-radius: 2px;
+      animation: loadingBar 1.5s infinite ease-in-out;
+      box-shadow: 0 0 8px #66fcf1;
+  }
+  
+  @keyframes loadingBar {
+      0% { left: -60px; }
+      100% { left: 160px; }
   }
 </style>
