@@ -11,6 +11,7 @@ pub struct MediaItem {
     pub modified_time: i64,
     pub created_time: i64,
     pub thumbnail_path: Option<String>,
+    pub orientation: u32,
 }
 
 pub fn get_db_path(app_handle: &tauri::AppHandle) -> std::result::Result<PathBuf, String> {
@@ -43,7 +44,8 @@ pub fn init_db(db_path: &PathBuf) -> Result<()> {
             size INTEGER NOT NULL,
             modified_time INTEGER NOT NULL,
             created_time INTEGER NOT NULL,
-            thumbnail_path TEXT
+            thumbnail_path TEXT,
+            orientation INTEGER DEFAULT 1
         )",
         [],
     )?;
@@ -85,8 +87,8 @@ pub fn insert_media_batch(db_path: &PathBuf, items: &[MediaItem]) -> Result<()> 
     {
         let mut stmt = tx.prepare(
             "INSERT OR REPLACE INTO media 
-            (file_path, filename, media_type, size, modified_time, created_time, thumbnail_path) 
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            (file_path, filename, media_type, size, modified_time, created_time, thumbnail_path, orientation) 
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
         )?;
         
         for item in items {
@@ -98,6 +100,7 @@ pub fn insert_media_batch(db_path: &PathBuf, items: &[MediaItem]) -> Result<()> 
                 item.modified_time,
                 item.created_time,
                 item.thumbnail_path,
+                item.orientation,
             ])?;
         }
     }
@@ -109,7 +112,7 @@ pub fn insert_media_batch(db_path: &PathBuf, items: &[MediaItem]) -> Result<()> 
 pub fn get_all_media(db_path: &PathBuf) -> Result<Vec<MediaItem>> {
     let conn = Connection::open(db_path)?;
     let mut stmt = conn.prepare(
-        "SELECT file_path, filename, media_type, size, modified_time, created_time, thumbnail_path FROM media"
+        "SELECT file_path, filename, media_type, size, modified_time, created_time, thumbnail_path, orientation FROM media"
     )?;
     
     let item_iter = stmt.query_map([], |row| {
@@ -121,6 +124,7 @@ pub fn get_all_media(db_path: &PathBuf) -> Result<Vec<MediaItem>> {
             modified_time: row.get(4)?,
             created_time: row.get(5)?,
             thumbnail_path: row.get(6)?,
+            orientation: row.get(7)?,
         })
     })?;
     

@@ -36,3 +36,6 @@
 ## Resolved Issues
 - [x] Fix Svelte file type errors by disabling checkJs in jsconfig.json <!-- id: 7.1 -->
 - [x] Fix "Add Folder to Scan" dialog not opening by adding dialog capability to default.json <!-- id: 7.2 -->
+- [x] Fix thumbnail wrong orientation by extracting EXIF orientation and applying CSS transforms <!-- id: 7.3 -->
+- [x] Improve icons across the application by integrating lucide-svelte package <!-- id: 7.4 -->
+- [x] Add fullscreen toggle for both the media viewer and the main app window <!-- id: 7.5 -->

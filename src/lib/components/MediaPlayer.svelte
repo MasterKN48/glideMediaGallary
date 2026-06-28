@@ -17,6 +17,28 @@
   // Video element binding
   let videoEl = $state(null);
   let isPlaying = $state(false);
+  let isFullscreenState = $state(false);
+
+  let rotationStyle = $derived(
+    item.orientation === 3 ? "rotate(180deg)" :
+    item.orientation === 6 ? "rotate(90deg)" :
+    item.orientation === 8 ? "rotate(270deg)" :
+    "rotate(0deg)"
+  );
+
+  function toggleHTML5Fullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => {
+        isFullscreenState = true;
+      }).catch((err) => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen().then(() => {
+        isFullscreenState = false;
+      });
+    }
+  }
 
   function handleKeyDown(e) {
     if (e.key === "Escape") {
@@ -75,8 +97,13 @@
 
   onMount(() => {
     window.addEventListener("keydown", handleKeyDown);
+    const onFsChange = () => {
+      isFullscreenState = !!document.fullscreenElement;
+    };
+    document.addEventListener("fullscreenchange", onFsChange);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("fullscreenchange", onFsChange);
     };
   });
 </script>
@@ -106,6 +133,13 @@
           <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
         </button>
       {/if}
+      <button class="icon-btn" onclick={toggleHTML5Fullscreen} title="Toggle Fullscreen (F)">
+        {#if isFullscreenState}
+          <svg viewBox="0 0 24 24"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>
+        {:else}
+          <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+        {/if}
+      </button>
       <button class="close-btn" onclick={onClose} title="Close (Esc)">
         <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
       </button>
@@ -138,8 +172,8 @@
       <img 
         src={mediaSrc} 
         alt={item.filename}
-        class="viewer-image"
-        style="transform: scale({zoom}) translate({panX}px, {panY}px); cursor: {zoom > 1 ? 'grab' : 'default'}"
+        class="viewer-image {item.orientation === 6 || item.orientation === 8 ? 'rotated-90-deg' : ''}"
+        style="transform: scale({zoom}) translate({panX}px, {panY}px) {rotationStyle}; cursor: {zoom > 1 ? 'grab' : 'default'}"
         onmousedown={handleMouseDown}
         draggable="false"
       />
@@ -310,6 +344,11 @@
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
       border-radius: 4px;
       transition: transform 0.1s ease-out;
+  }
+  
+  .viewer-image.rotated-90-deg {
+      max-width: 55vh;
+      max-height: 80vw;
   }
   
   .viewer-video {

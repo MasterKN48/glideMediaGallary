@@ -3,15 +3,37 @@
   import { invoke } from "@tauri-apps/api/core";
   import { listen } from "@tauri-apps/api/event";
   import { open } from "@tauri-apps/plugin-dialog";
+  import { getCurrentWindow } from "@tauri-apps/api/window";
   
+  // Svelte Component imports
   import VirtualGrid from "../lib/components/VirtualGrid.svelte";
   import MediaPlayer from "../lib/components/MediaPlayer.svelte";
+
+  // Lucide Icons imports
+  import { 
+    Images, 
+    FolderPlus, 
+    Folder, 
+    Trash2, 
+    Layers, 
+    Image as ImageIcon, 
+    Video as VideoIcon, 
+    Music as MusicIcon, 
+    Loader2, 
+    CheckCircle2,
+    Maximize2,
+    Minimize2
+  } from "lucide-svelte";
+
+  // App window instance
+  const appWindow = getCurrentWindow();
 
   // App state using Svelte 5 runes
   let folders = $state([]);
   let media = $state([]);
   let activeFilter = $state("all"); // "all" | "image" | "video" | "audio"
   let viewMode = $state("day"); // "day" | "month" | "year"
+  let isWindowFullscreen = $state(false);
   
   // Scanning state
   let scanningStatus = $state("");
@@ -76,8 +98,31 @@
     }
   }
 
+  async function toggleWindowFullscreen() {
+    try {
+      const isFull = await appWindow.isFullscreen();
+      await appWindow.setFullscreen(!isFull);
+      isWindowFullscreen = !isFull;
+    } catch (err) {
+      console.error("Failed to toggle window fullscreen:", err);
+      // HTML5 fullscreen fallback
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+        isWindowFullscreen = true;
+      } else {
+        document.exitFullscreen();
+        isWindowFullscreen = false;
+      }
+    }
+  }
+
   onMount(() => {
     loadInitialData();
+
+    // Check initial window fullscreen state
+    appWindow.isFullscreen().then(val => {
+      isWindowFullscreen = val;
+    });
 
     // Listen to background scanning progress
     const unsubBatch = listen("scanned_batch", (event) => {
@@ -127,7 +172,7 @@
   <!-- Glassmorphic Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-header">
-      <svg viewBox="0 0 24 24" class="logo-icon"><path d="M22 16V4c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2zm-11-4l2.03 2.71L16 11l4 5H8l3-4zM2 6v14c0 1.1.9 2 2 2h14v-2H4V6H2z"/></svg>
+      <Images class="logo-icon" size={24} />
       <h1>Media Gallery</h1>
     </div>
 
@@ -135,15 +180,20 @@
     {#if scanningStatus}
       <div class="scan-status-card {isScanning ? 'pulse-border' : ''}">
         <div class="status-indicator">
-          <span class="status-dot {isScanning ? 'active' : ''}"></span>
-          <span class="status-label">{isScanning ? 'Scanning Disk...' : 'Done'}</span>
+          {#if isScanning}
+            <Loader2 class="spin-icon" size={16} />
+            <span class="status-label">Scanning Disk...</span>
+          {:else}
+            <CheckCircle2 class="done-icon" size={16} />
+            <span class="status-label">Scan Complete</span>
+          {/if}
         </div>
         <div class="status-details">{scanningStatus}</div>
       </div>
     {/if}
 
     <button class="add-folder-btn" onclick={handleAddFolder}>
-      <svg viewBox="0 0 24 24" class="btn-icon"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      <FolderPlus class="btn-icon" size={18} />
       Add Folder to Scan
     </button>
 
@@ -151,9 +201,10 @@
     <div class="folders-list">
       {#each folders as folder}
         <div class="folder-item" title={folder}>
+          <Folder size={14} class="folder-icon" />
           <span class="folder-path">{folder}</span>
           <button class="remove-folder-btn" onclick={() => handleRemoveFolder(folder)} title="Remove folder">
-            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            <Trash2 size={14} />
           </button>
         </div>
       {/each}
@@ -165,19 +216,19 @@
     <div class="section-title">Filter Library</div>
     <nav class="filter-menu">
       <button class="filter-item {activeFilter === 'all' ? 'active' : ''}" onclick={() => activeFilter = "all"}>
-        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
+        <Layers class="nav-icon" size={18} />
         All Media
       </button>
       <button class="filter-item {activeFilter === 'image' ? 'active' : ''}" onclick={() => activeFilter = "image"}>
-        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+        <ImageIcon class="nav-icon" size={18} />
         Photos
       </button>
       <button class="filter-item {activeFilter === 'video' ? 'active' : ''}" onclick={() => activeFilter = "video"}>
-        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+        <VideoIcon class="nav-icon" size={18} />
         Videos
       </button>
       <button class="filter-item {activeFilter === 'audio' ? 'active' : ''}" onclick={() => activeFilter = "audio"}>
-        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+        <MusicIcon class="nav-icon" size={18} />
         Audio
       </button>
     </nav>
@@ -191,10 +242,20 @@
         <span class="media-total">{filteredMedia.length} files</span>
       </div>
       
-      <div class="view-mode-selector">
-        <button class="view-mode-btn {viewMode === 'day' ? 'active' : ''}" onclick={() => viewMode = 'day'}>Day</button>
-        <button class="view-mode-btn {viewMode === 'month' ? 'active' : ''}" onclick={() => viewMode = 'month'}>Month</button>
-        <button class="view-mode-btn {viewMode === 'year' ? 'active' : ''}" onclick={() => viewMode = 'year'}>Year</button>
+      <div class="header-right-controls">
+        <div class="view-mode-selector">
+          <button class="view-mode-btn {viewMode === 'day' ? 'active' : ''}" onclick={() => viewMode = 'day'}>Day</button>
+          <button class="view-mode-btn {viewMode === 'month' ? 'active' : ''}" onclick={() => viewMode = 'month'}>Month</button>
+          <button class="view-mode-btn {viewMode === 'year' ? 'active' : ''}" onclick={() => viewMode = 'year'}>Year</button>
+        </div>
+
+        <button class="window-fs-btn" onclick={toggleWindowFullscreen} title="Toggle App Fullscreen">
+          {#if isWindowFullscreen}
+            <Minimize2 size={16} />
+          {:else}
+            <Maximize2 size={16} />
+          {/if}
+        </button>
       </div>
     </header>
 
@@ -263,10 +324,8 @@
       margin-bottom: 30px;
   }
   
-  .logo-icon {
-      width: 24px;
-      height: 24px;
-      fill: #66fcf1;
+  :global(.logo-icon) {
+      color: #66fcf1;
       filter: drop-shadow(0 0 6px rgba(102, 252, 241, 0.5));
   }
   
@@ -304,22 +363,18 @@
       margin-bottom: 6px;
   }
   
-  .status-dot {
-      width: 8px;
-      height: 8px;
-      background: #88888e;
-      border-radius: 50%;
-  }
-  .status-dot.active {
-      background: #66fcf1;
-      box-shadow: 0 0 8px #66fcf1;
-      animation: pulseDot 1.5s infinite;
+  :global(.spin-icon) {
+      color: #66fcf1;
+      animation: spin 1.5s linear infinite;
   }
   
-  @keyframes pulseDot {
-      0% { transform: scale(0.9); opacity: 0.6; }
-      50% { transform: scale(1.15); opacity: 1; }
-      100% { transform: scale(0.9); opacity: 0.6; }
+  @keyframes spin {
+      100% { transform: rotate(360deg); }
+  }
+
+  :global(.done-icon) {
+      color: #39d353;
+      filter: drop-shadow(0 0 3px rgba(57, 211, 83, 0.3));
   }
   
   .status-label {
@@ -360,11 +415,6 @@
   .add-folder-btn:active {
       transform: translateY(0);
   }
-  .btn-icon {
-      width: 16px;
-      height: 16px;
-      fill: currentColor;
-  }
   
   .section-title {
       font-size: 0.75rem;
@@ -398,6 +448,11 @@
   .folder-item:hover {
       background: rgba(255, 255, 255, 0.04);
   }
+
+  .folder-icon {
+      color: #a8a8af;
+      flex-shrink: 0;
+  }
   
   .folder-path {
       font-size: 0.8rem;
@@ -423,11 +478,6 @@
   }
   .remove-folder-btn:hover {
       color: #ff5f56;
-  }
-  .remove-folder-btn svg {
-      width: 14px;
-      height: 14px;
-      fill: currentColor;
   }
   
   .no-folders-msg {
@@ -472,9 +522,7 @@
       border-radius: 0 8px 8px 0;
   }
   .nav-icon {
-      width: 18px;
-      height: 18px;
-      fill: currentColor;
+      flex-shrink: 0;
   }
   
   /* Gallery Main Panel */
@@ -508,6 +556,12 @@
       color: #a8a8af;
   }
   
+  .header-right-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+  }
+
   .view-mode-selector {
       display: flex;
       background: rgba(255, 255, 255, 0.03);
@@ -537,6 +591,26 @@
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   }
   
+  .window-fs-btn {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #a8a8af;
+      cursor: pointer;
+      transition: all 0.2s;
+      outline: none;
+  }
+  .window-fs-btn:hover {
+      color: #66fcf1;
+      border-color: rgba(102, 252, 241, 0.4);
+      background: rgba(102, 252, 241, 0.08);
+  }
+
   .grid-content {
       flex: 1;
       overflow: hidden;

@@ -69,17 +69,17 @@ fn parse_exif_date_str(s: &str) -> Option<i64> {
     }
 }
 
-// Extract EXIF date and EXIF embedded thumbnail
-fn get_exif_metadata(path: &Path) -> (Option<i64>, Option<Vec<u8>>) {
+// Extract EXIF date, EXIF embedded thumbnail, and orientation
+fn get_exif_metadata(path: &Path) -> (Option<i64>, Option<Vec<u8>>, u32) {
     let file = match File::open(path) {
         Ok(f) => f,
-        Err(_) => return (None, None),
+        Err(_) => return (None, None, 1),
     };
     let mut bufreader = BufReader::new(file);
-    let mut reader = Reader::new();
+    let reader = Reader::new();
     let exif = match reader.read_from_container(&mut bufreader) {
         Ok(e) => e,
-        Err(_) => return (None, None),
+        Err(_) => return (None, None, 1),
     };
 
     let mut timestamp = None;
@@ -90,6 +90,13 @@ fn get_exif_metadata(path: &Path) -> (Option<i64>, Option<Vec<u8>>) {
                 timestamp = Some(ts);
                 break;
             }
+        }
+    }
+
+    let mut orientation = 1;
+    if let Some(field) = exif.get_field(Tag::Orientation, In::PRIMARY) {
+        if let Some(val) = field.value.get_uint(0) {
+            orientation = val;
         }
     }
 
@@ -108,7 +115,7 @@ fn get_exif_metadata(path: &Path) -> (Option<i64>, Option<Vec<u8>>) {
         }
     }
 
-    (timestamp, thumb)
+    (timestamp, thumb, orientation)
 }
 
 // Perform scanning in a separate thread
@@ -183,10 +190,12 @@ pub fn scan_directory_in_background(
                 .unwrap_or(modified_time);
 
             let mut thumbnail_path = None;
+            let mut orientation = 1;
 
             // Extract EXIF data if it is an image
             if media_type == "image" {
-                let (exif_date, exif_thumb) = get_exif_metadata(&path);
+                let (exif_date, exif_thumb, exif_orient) = get_exif_metadata(&path);
+                orientation = exif_orient;
                 if let Some(date) = exif_date {
                     created_time = date;
                 }
@@ -210,6 +219,7 @@ pub fn scan_directory_in_background(
                 modified_time,
                 created_time,
                 thumbnail_path,
+                orientation,
             };
 
             batch.push(item);

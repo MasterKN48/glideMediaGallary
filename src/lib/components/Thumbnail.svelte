@@ -7,6 +7,13 @@
   let loading = $state(true);
   let el = $state(null);
 
+  let rotationStyle = $derived(
+    item.orientation === 3 ? "transform: rotate(180deg);" :
+    item.orientation === 6 ? "transform: rotate(90deg);" :
+    item.orientation === 8 ? "transform: rotate(270deg);" :
+    ""
+  );
+
   async function loadThumbnail() {
       if (item.media_type !== "image") {
           // Video or audio placeholder
@@ -54,7 +61,7 @@
   {#if loading}
     <div class="skeleton"></div>
   {:else if item.media_type === "image"}
-    <img src={imgSrc} alt={item.filename} class="media-thumb" loading="lazy" />
+    <img src={imgSrc} alt={item.filename} class="media-thumb" style={rotationStyle} loading="lazy" />
   {:else if item.media_type === "video"}
     <div class="video-placeholder">
       <svg viewBox="0 0 24 24" class="play-icon"><path d="M8 5v14l11-7z"/></svg>
