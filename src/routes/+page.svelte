@@ -172,8 +172,11 @@
   <!-- Glassmorphic Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-header">
-      <Images class="logo-icon" size={24} />
-      <h1>Media Gallery</h1>
+      <img src="/logo.svg" class="logo-image" alt="Glide Logo" />
+      <div class="header-text">
+        <h1>Glide</h1>
+        <p class="tagline">Ultra-fast portable media gallery</p>
+      </div>
     </div>
 
     <!-- Scan Progress Status -->
@@ -319,14 +322,31 @@
   
   .sidebar-header {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 12px;
       margin-bottom: 30px;
   }
   
-  :global(.logo-icon) {
-      color: #66fcf1;
-      filter: drop-shadow(0 0 6px rgba(102, 252, 241, 0.5));
+  .header-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+  }
+  
+  .tagline {
+      font-size: 0.68rem;
+      color: #a8a8af;
+      margin: 0;
+      line-height: 1.35;
+      font-weight: 500;
+  }
+
+  .logo-image {
+      width: 26px;
+      height: 26px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 4px rgba(102, 252, 241, 0.4));
+      margin-top: 2px;
   }
   
   .sidebar-header h1 {
@@ -335,6 +355,7 @@
       color: #ffffff;
       margin: 0;
       letter-spacing: -0.5px;
+      line-height: 1.1;
   }
   
   .scan-status-card {

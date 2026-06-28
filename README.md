@@ -1,6 +1,6 @@
-# High-Performance Portable Media Gallery
+# Glide: A Portable Media Gallery App
 
-An ultra-fast, smooth (60+ FPS), and lightweight cross-platform Media Gallery application designed for external SSDs, HDDs, and local storage. Built using a native **Rust/Tauri** backend and a **Svelte 5 (Vanilla JavaScript)** frontend.
+Glide is an ultra-fast, lightweight cross-platform media gallery designed to scan and browse large local and external SSDs/HDDs smoothly at 60 FPS in an elegant glassmorphic dark mode. Built using a native **Rust/Tauri** backend and a **Svelte 5 (Vanilla JavaScript)** frontend.
 
 ---
 
