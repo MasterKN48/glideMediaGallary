@@ -36,7 +36,7 @@
 
   // Filter rows currently visible in the viewport (plus buffer)
   let visibleRows = $derived.by(() => {
-    const buffer = 300; // 300px offscreen buffer above and below
+    const buffer = 1200; // 1200px offscreen buffer above and below
     const startY = Math.max(0, scrollTop - buffer);
     const endY = scrollTop + containerHeight + buffer;
     
