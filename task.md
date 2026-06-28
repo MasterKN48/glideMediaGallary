@@ -53,3 +53,4 @@
 - [x] Improve search input icon spacing gap and increase sidebar header logo dimensions for dark mode legibility <!-- id: 7.17 -->
 - [x] Add camera metadata, device details, and GPS location coordinates support to file info panel <!-- id: 7.18 -->
 - [x] Replace default Tauri system icons with custom Glide light-themed assets across native dock, taskbar, ICNS, and ICO targets <!-- id: 7.19 -->
+- [x] Add Cargo release profile size optimizations (LTO, strip, codegen-units, panic = abort) to shrink the final compiled app binary size <!-- id: 7.20 -->

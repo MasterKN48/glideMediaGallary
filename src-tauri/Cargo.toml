@@ -29,3 +29,10 @@ kamadak-exif = "0.6"
 tauri-plugin-dialog = "2"
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
 
+[profile.release]
+opt-level = "z"         # Optimize for size
+lto = true              # Enable link-time optimization
+codegen-units = 1       # Reduce codegen units to increase optimization potential
+panic = "abort"         # Abort on panic to remove unwinding code size
+strip = true            # Strip symbols and debug info from the final binary
+
