@@ -39,3 +39,7 @@
 - [x] Fix thumbnail wrong orientation by extracting EXIF orientation and applying CSS transforms <!-- id: 7.3 -->
 - [x] Improve icons across the application by integrating lucide-svelte package <!-- id: 7.4 -->
 - [x] Add fullscreen toggle for both the media viewer and the main app window <!-- id: 7.5 -->
+- [x] Fix zoom-in icon using Lucide ZoomIn component <!-- id: 7.6 -->
+- [x] Fix fullscreen on image/video not working by switching to native Tauri AppWindow fullscreen API <!-- id: 7.7 -->
+- [x] Fix wrong initial image viewer orientation by removing the browser double-rotation issue <!-- id: 7.8 -->
+- [x] Add manual rotation button (`RotateCw`) for user-driven orientation correction <!-- id: 7.9 -->
