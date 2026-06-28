@@ -27,7 +27,8 @@
     Search,
     X,
     Sun,
-    Moon
+    Moon,
+    RefreshCw
   } from "lucide-svelte";
 
   // App window instance
@@ -115,6 +116,16 @@
       }
     } catch (err) {
       console.error("Failed to add folder:", err);
+    }
+  }
+
+  async function handleRefreshScan() {
+    try {
+      for (const folder of folders) {
+        await invoke("start_scan", { path: folder });
+      }
+    } catch (err) {
+      console.error("Failed to refresh folder scan:", err);
     }
   }
 
@@ -262,7 +273,14 @@
       {/if}
     </div>
 
-    <div class="section-title">Indexed Folders</div>
+    <div class="section-header-row">
+      <div class="section-title">Indexed Folders</div>
+      {#if folders.length > 0}
+        <button class="refresh-folders-btn" onclick={handleRefreshScan} title="Rescan Folders" disabled={isScanning}>
+          <RefreshCw class="btn-spin-icon {isScanning ? 'spin' : ''}" size={14} />
+        </button>
+      {/if}
+    </div>
     <div class="folders-list">
       {#each folders as folder}
         <div class="folder-item" title={folder}>
@@ -681,6 +699,48 @@
       transform: translateY(0);
   }
   
+  .section-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+  }
+  
+  .section-header-row .section-title {
+      margin-bottom: 0;
+  }
+  
+  .refresh-folders-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--text-faint);
+      cursor: pointer;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      outline: none;
+  }
+  
+  .refresh-folders-btn:hover:not(:disabled) {
+      color: var(--accent);
+      background: var(--surface-elevated);
+      border: 1px solid var(--surface-border-elevated);
+  }
+  
+  .refresh-folders-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+  }
+  
+  :global(.btn-spin-icon.spin) {
+      animation: spin 1.5s linear infinite;
+  }
+
   .section-title {
       font-size: 0.75rem;
       font-weight: 700;
