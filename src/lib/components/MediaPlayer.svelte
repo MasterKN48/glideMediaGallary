@@ -479,17 +479,26 @@
   /* Fullscreen Active Mode adjustments */
   .fullscreen-active .player-top-bar {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
+      top: 40px;
+      left: 24px;
+      right: 24px;
+      width: calc(100% - 48px);
+      height: 56px;
+      padding: 0 20px;
+      border-radius: 12px;
+      background: rgba(13, 13, 18, 0.8);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
       opacity: 0;
       z-index: 1020;
-      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0) 100%);
-      border-bottom: none;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      transform: translateY(-10px);
   }
   .fullscreen-active .player-top-bar:hover {
       opacity: 1;
+      transform: translateY(0);
   }
   
   .fullscreen-active .media-content-container {

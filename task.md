@@ -47,3 +47,4 @@
 - [x] Add smooth high-performance CSS transitions, Svelte mount animations, and micro-interactions <!-- id: 7.11 -->
 - [x] Fix fullscreen button not working by adding window capabilities (core:window:allow-set-fullscreen and core:window:allow-is-fullscreen) to default.json <!-- id: 7.12 -->
 - [x] Fix fullscreen media scaling layout bug (media now expands to fill 100% viewport and controls auto-hide) <!-- id: 7.13 -->
+- [x] Fix fullscreen controls overlapping macOS menu bar by switching to a floating card layout offset from the screen top <!-- id: 7.14 -->
