@@ -89,11 +89,58 @@ Make sure you have the following installed on your developer machine:
    ```
 
 ### Building for Distribution
-To build a production-ready, self-contained desktop bundle (`.app` for macOS, `.exe` for Windows, `.deb` for Linux):
+To build a production-ready, self-contained desktop bundle for the host system:
 ```bash
 bun run tauri build
 ```
 The compiled binaries will be outputted to `src-tauri/target/release/bundle/`.
+
+---
+
+## 📦 Build & Release Guide
+
+### 1. Understanding Release Bundles
+*   **`.dmg` (macOS Disk Image):** The standard macOS distribution format. Users double-click to drag the application into their `/Applications` directory.
+*   **`.app` (macOS Application):** The raw compiled application bundle directory. Can be launched directly.
+*   **`.msi` / `.exe` (Windows):** Windows installer format generated when compiling on a Windows host.
+*   **`.deb` / `.AppImage` (Linux):** Debian package and self-contained sandbox execution format generated when compiling on a Linux host.
+
+### 2. Multi-Platform Compilation
+Since Tauri builds native binaries, you must compile the final release assets on the respective target operating systems or set up a continuous integration pipeline:
+*   **Windows Builds:** Compile on Windows 10/11 or use a Windows VM.
+*   **Linux Builds:** Compile on Ubuntu/Debian or run inside a Docker container.
+*   **GitHub Actions CI:** You can automate multi-platform builds using a runner workflow matrix that spins up macOS, Windows, and Ubuntu instances concurrently.
+
+### 3. Mobile Support (Android & iOS)
+Tauri v2 supports compiling for mobile targets.
+
+#### Prerequisites
+- **iOS:** Xcode and Command Line Tools (macOS host only).
+- **Android:** Android Studio, SDK Platform Tools, and the Android NDK.
+
+#### Initialization
+Add mobile project configurations to your workspace:
+```bash
+# Add Android configuration wrappers
+bun tauri android init
+
+# Add iOS configuration wrappers
+bun tauri ios init
+```
+
+#### Run & Build
+*   **Development Simulator:**
+    ```bash
+    bun tauri android dev
+    # or
+    bun tauri ios dev
+    ```
+*   **Release Compiles:**
+    ```bash
+    bun tauri android build
+    # or
+    bun tauri ios build
+    ```
 
 ---
 
