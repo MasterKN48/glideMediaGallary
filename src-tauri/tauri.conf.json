@@ -27,7 +27,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["nsis", "deb", "appimage", "app"],
     "publisher": "MasterKN48",
     "copyright": "Copyright © 2026 MasterKN48. All rights reserved.",
     "icon": [
